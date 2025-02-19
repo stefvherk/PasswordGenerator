@@ -4,6 +4,7 @@ import mysql.connector
 from mysql.connector import Error
 
 MAX_PASSWORD_LENGTH = 50
+# Generate password with the given length and allowed character sets, add it to the database and return the password
 
 def generate_password(length, use_symbols, use_numbers, use_uppercase, use_lowercase, db_config, table, value_name):
     if length > MAX_PASSWORD_LENGTH:
@@ -29,6 +30,8 @@ def generate_password(length, use_symbols, use_numbers, use_uppercase, use_lower
 
     return password
 
+# Check if the password already exists in the database and return True if it does, otherwise False.
+# Return False if an error occurs and display the error.
 def password_exists(password, db_config, table, value_name):
     try:
         with mysql.connector.connect(**db_config) as conn:
@@ -40,6 +43,7 @@ def password_exists(password, db_config, table, value_name):
         print(f"Error: {e}")
         return False
 
+# Add the password to the database. Catch any errors and display them.
 def add_password_to_db(password, db_config, table, value_name):
     try:
         with mysql.connector.connect(**db_config) as conn:
@@ -51,6 +55,7 @@ def add_password_to_db(password, db_config, table, value_name):
     except Error as e:
         print(f"Error: {e}")
 
+# Ask the user for the database configuration and other required information and generate passwords until the user decides to stop.
 def main():
     db_config = {}
     db_config['host'] = input("Enter the database host: ")
@@ -60,17 +65,19 @@ def main():
     table = input("Enter the table name: ")
     value_name = input("Enter the value name to check against: ")
 
+# Connect to the database to check if the given configuration is correct. If not, print the error and return the function.
     try:
         mysql.connector.connect(**db_config).close()
     except Error as e:
         print(f"Error: {e}")
         return
-
+# Repeat until 'exit' is entered.
     while True:
         length_input = input(f"Enter the length of the password (max {MAX_PASSWORD_LENGTH}) or 'exit' to quit: ")
         if length_input.lower() == 'exit':
             break
-
+# Try to convert the length of the password to an integer and check if it does not exceed the maximum length.
+# Ask the user if they want to use special characters, numbers, uppercase, and lowercase letters.
         try:
             length = int(length_input)
             if length > MAX_PASSWORD_LENGTH:
@@ -84,7 +91,8 @@ def main():
             password = generate_password(length, use_symbols, use_numbers, use_uppercase, use_lowercase, db_config, table, value_name)
             print(f"Generated password: {password}")
         except ValueError as e:
-            print(e)
+            print(f"Invalid input: {e}")
 
+# Run main function if the script is executed directly
 if __name__ == "__main__":
     main()
