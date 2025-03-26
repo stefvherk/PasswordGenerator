@@ -4,7 +4,6 @@ import mysql.connector
 from mysql.connector import Error
 
 MAX_PASSWORD_LENGTH = 50
-# Generate password with the given length and allowed character sets, add it to the database and return the password
 
 def generate_password(length, use_symbols, use_numbers, use_uppercase, use_lowercase, db_config, table, value_name):
     if length > MAX_PASSWORD_LENGTH:
@@ -30,8 +29,6 @@ def generate_password(length, use_symbols, use_numbers, use_uppercase, use_lower
 
     return password
 
-# Check if the password already exists in the database and return True if it does, otherwise False.
-# Return False if an error occurs and display the error.
 def password_exists(password, db_config, table, value_name):
     try:
         with mysql.connector.connect(**db_config) as conn:
@@ -43,7 +40,6 @@ def password_exists(password, db_config, table, value_name):
         print(f"Error: {e}")
         return False
 
-# Add the password to the database. Catch any errors and display them.
 def add_password_to_db(password, db_config, table, value_name):
     try:
         with mysql.connector.connect(**db_config) as conn:
@@ -55,44 +51,62 @@ def add_password_to_db(password, db_config, table, value_name):
     except Error as e:
         print(f"Error: {e}")
 
-# Ask the user for the database configuration and other required information and generate passwords until the user decides to stop.
 def main():
     db_config = {}
-    db_config['host'] = input("Enter the database host: ")
-    db_config['user'] = input("Enter the database username: ")
-    db_config['password'] = input("Enter the database password: ")
-    db_config['database'] = input("Enter the database name: ")
-    table = input("Enter the table name: ")
-    value_name = input("Enter the value name to check against: ")
+    db_config['host'] = input("Enter the database host: ").strip()
+    db_config['user'] = input("Enter the database username: ").strip()
+    db_config['password'] = input("Enter the database password: ").strip()
+    db_config['database'] = input("Enter the database name: ").strip()
+    table = input("Enter the table name: ").strip()
+    value_name = input("Enter the value name to check against: ").strip()
 
-# Connect to the database to check if the given configuration is correct. If not, print the error and return the function.
+    if not all([db_config['host'], db_config['user'], db_config['password'], db_config['database'], table, value_name]):
+        print("All fields are required. Please try again.")
+        return
+
     try:
         mysql.connector.connect(**db_config).close()
     except Error as e:
         print(f"Error: {e}")
         return
-# Repeat until 'exit' is entered.
+
     while True:
-        length_input = input(f"Enter the length of the password (max {MAX_PASSWORD_LENGTH}) or 'exit' to quit: ")
+        length_input = input(f"Enter the length of the password (max {MAX_PASSWORD_LENGTH}) or 'exit' to quit: ").strip()
         if length_input.lower() == 'exit':
             break
-# Try to convert the length of the password to an integer and check if it does not exceed the maximum length.
-# Ask the user if they want to use special characters, numbers, uppercase, and lowercase letters.
+
+        if not length_input.isdigit():
+            print("Invalid input: Length must be a number.")
+            continue
+
+        length = int(length_input)
+        if length > MAX_PASSWORD_LENGTH:
+            print(f"Invalid input: Password length cannot exceed {MAX_PASSWORD_LENGTH} characters.")
+            continue
+
+        use_symbols = input("Use symbols? (y/n): ").strip().lower()
+        use_numbers = input("Use numbers? (y/n): ").strip().lower()
+        use_uppercase = input("Use uppercase letters? (y/n): ").strip().lower()
+        use_lowercase = input("Use lowercase letters? (y/n): ").strip().lower()
+
+        if use_symbols not in ['y', 'n'] or use_numbers not in ['y', 'n'] or use_uppercase not in ['y', 'n'] or use_lowercase not in ['y', 'n']:
+            print("Invalid input: Please enter 'y' or 'n' for each option.")
+            continue
+
+        use_symbols = use_symbols == 'y'
+        use_numbers = use_numbers == 'y'
+        use_uppercase = use_uppercase == 'y'
+        use_lowercase = use_lowercase == 'y'
+
+        if not any([use_symbols, use_numbers, use_uppercase, use_lowercase]):
+            print("Invalid input: At least one character set must be selected.")
+            continue
+
         try:
-            length = int(length_input)
-            if length > MAX_PASSWORD_LENGTH:
-                raise ValueError(f"Password length cannot exceed {MAX_PASSWORD_LENGTH} characters")
-
-            use_symbols = input("Use symbols? (y/n): ").lower() == 'y'
-            use_numbers = input("Use numbers? (y/n): ").lower() == 'y'
-            use_uppercase = input("Use uppercase letters? (y/n): ").lower() == 'y'
-            use_lowercase = input("Use lowercase letters? (y/n): ").lower() == 'y'
-
             password = generate_password(length, use_symbols, use_numbers, use_uppercase, use_lowercase, db_config, table, value_name)
             print(f"Generated password: {password}")
         except ValueError as e:
-            print(f"Invalid input: {e}")
+            print(f"Error: {e}")
 
-# Run main function if the script is executed directly
 if __name__ == "__main__":
     main()
